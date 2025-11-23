@@ -67,14 +67,16 @@ app.get('/', async (req, res) => {
                       </tr>
                     </thead>
           <tbody id="linksTableBody">
-            ${links.map(link => `
-              <tr data-code="${link.shortcode}" data-url="${link.target_url.toLowerCase()}" data-has-password="${link.has_password || false}">
+            ${links.map(link => {
+              const hasPassword = !!(link.password && link.password.trim() !== '');
+              return `
+              <tr data-code="${link.shortcode}" data-url="${link.target_url.toLowerCase()}" data-has-password="${hasPassword}">
                 <td class="shortcode">${link.shortcode}</td>
                 <td class="url-cell" title="${link.target_url}">${truncateUrl(link.target_url)}</td>
                 <td>${link.click_count}</td>
                 <td>${formatDate(link.last_clicked_at)}</td>
                 <td>
-                  ${link.has_password ? '<span class="password-protected">🔒 Protected</span>' : '<span class="no-password">⚠️ No Password</span>'}
+                  ${hasPassword ? '<span class="password-protected">🔒 Protected</span>' : '<span class="no-password">⚠️ No Password</span>'}
                 </td>
                 <td class="actions-cell">
                   <a href="/code/${link.shortcode}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">Stats</a>
@@ -82,7 +84,8 @@ app.get('/', async (req, res) => {
                   <button onclick="copyLink('${link.shortcode}')" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;">Copy</button>
                 </td>
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
       `;
