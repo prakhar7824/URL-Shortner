@@ -43,8 +43,9 @@ if (passwordInput) {
 createForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  const password = document.getElementById('password').value;
-  if (!password || password.trim() === '') {
+  const password = document.getElementById('password').value.trim();
+  
+  if (!password || password === '') {
     const confirmNoPassword = confirm('⚠️ WARNING: You are not setting a password. Anyone who can access this dashboard can delete your link. You are responsible if the link is lost or deleted by someone else.\n\nDo you want to continue without a password?');
     if (!confirmNoPassword) {
       return;
@@ -57,16 +58,21 @@ createForm.addEventListener('submit', async (e) => {
   const shortcode = document.getElementById('shortcode').value;
 
   try {
+    const requestBody = {
+      url: url,
+      shortcode: shortcode || undefined
+    };
+
+    if (password && password !== '') {
+      requestBody.password = password;
+    }
+
     const response = await fetch('/api/links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        url: url,
-        shortcode: shortcode || undefined,
-        password: password || undefined
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const data = await response.json();
@@ -89,20 +95,12 @@ createForm.addEventListener('submit', async (e) => {
 });
 
 async function deleteLink(code) {
-  const linkRow = document.querySelector(`tr[data-code="${code}"]`);
-  const hasPassword = linkRow ? linkRow.getAttribute('data-has-password') === 'true' : false;
-  
-  let password = '';
-  if (hasPassword) {
-    password = prompt('This link is password protected. Enter the password to delete:');
-    if (!password) {
-      return;
-    }
-  }
-
   if (!confirm('Are you sure you want to delete this link?')) {
     return;
   }
+
+  let password = '';
+  let passwordPrompted = false;
 
   try {
     const response = await fetch('/api/links/' + code, {
@@ -120,8 +118,38 @@ async function deleteLink(code) {
       setTimeout(() => {
         window.location.reload();
       }, 1000);
+      return;
+    }
+
+    const errorData = await response.json();
+
+    if (response.status === 401 && !passwordPrompted) {
+      password = prompt('This link is password protected. Enter the password to delete:');
+      if (!password) {
+        return;
+      }
+      passwordPrompted = true;
+
+      const retryResponse = await fetch('/api/links/' + code, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          password: password
+        })
+      });
+
+      if (retryResponse.ok) {
+        showSuccess('Link deleted successfully!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        const retryErrorData = await retryResponse.json();
+        showError(retryErrorData.error || 'Incorrect password. Please try again.');
+      }
     } else {
-      const errorData = await response.json();
       showError(errorData.error || 'Failed to delete link');
     }
   } catch (error) {

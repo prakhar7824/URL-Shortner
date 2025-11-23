@@ -62,7 +62,7 @@ router.post('/links', async (req, res) => {
       click_count: 0
     };
 
-    if (password && password.trim() !== '') {
+    if (password && typeof password === 'string' && password.trim() !== '') {
       insertData.password = password.trim();
     }
 
@@ -76,10 +76,16 @@ router.post('/links', async (req, res) => {
       if (error.code === '23505') {
         return res.status(409).json({ error: 'Shortcode already exists' });
       }
-      return res.status(500).json({ error: 'Failed to create link' });
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ error: 'Failed to create link: ' + error.message });
     }
 
-    res.status(201).json(data);
+    const responseData = {
+      ...data,
+      has_password: !!(data.password && data.password.trim() !== '')
+    };
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error('Error creating link:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -99,7 +105,7 @@ router.get('/links', async (req, res) => {
 
     const linksWithPasswordFlag = data.map(link => ({
       ...link,
-      has_password: !!link.password,
+      has_password: !!(link.password && link.password.trim() !== ''),
       password: undefined
     }));
 
@@ -126,7 +132,7 @@ router.get('/links/:code', async (req, res) => {
 
     const response = {
       ...data,
-      has_password: !!data.password,
+      has_password: !!(data.password && data.password.trim() !== ''),
       password: undefined
     };
 
@@ -152,12 +158,12 @@ router.delete('/links/:code', async (req, res) => {
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    if (link.password) {
-      if (!password) {
+    if (link.password && link.password.trim() !== '') {
+      if (!password || password.trim() === '') {
         return res.status(401).json({ error: 'Password is required to delete this link' });
       }
 
-      if (link.password !== password.trim()) {
+      if (link.password.trim() !== password.trim()) {
         return res.status(403).json({ error: 'Incorrect password' });
       }
     }
