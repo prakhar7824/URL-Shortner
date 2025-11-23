@@ -28,6 +28,14 @@
             <input type="text" id="shortcode" name="shortcode" placeholder="mycode" pattern="[A-Za-z0-9]{6,8}" maxlength="8">
             <small>6-8 characters, letters and numbers only. Leave empty for auto-generation.</small>
           </div>
+          <div class="form-group">
+            <label for="password">Deletion Password (Optional but Recommended)</label>
+            <input type="password" id="password" name="password" placeholder="Enter password to protect deletion">
+            <small>If set, password will be required to delete this link. If not set, anyone can delete your link.</small>
+            <div class="warning-message" id="passwordWarning" style="display: none;">
+              <strong>⚠️ Warning:</strong> You are not setting a password. Anyone who can access this dashboard can delete your link. You are responsible if the link is lost or deleted by someone else.
+            </div>
+          </div>
           <button type="submit" class="btn btn-primary">Create Short Link</button>
         </form>
       </div>

@@ -21,8 +21,36 @@ function showSuccess(message) {
   }, 3000);
 }
 
+const passwordInput = document.getElementById('password');
+const passwordWarning = document.getElementById('passwordWarning');
+
+if (passwordInput) {
+  passwordInput.addEventListener('input', () => {
+    if (passwordInput.value.trim() === '') {
+      passwordWarning.style.display = 'block';
+    } else {
+      passwordWarning.style.display = 'none';
+    }
+  });
+
+  passwordInput.addEventListener('blur', () => {
+    if (passwordInput.value.trim() === '') {
+      passwordWarning.style.display = 'block';
+    }
+  });
+}
+
 createForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  const password = document.getElementById('password').value;
+  if (!password || password.trim() === '') {
+    const confirmNoPassword = confirm('⚠️ WARNING: You are not setting a password. Anyone who can access this dashboard can delete your link. You are responsible if the link is lost or deleted by someone else.\n\nDo you want to continue without a password?');
+    if (!confirmNoPassword) {
+      return;
+    }
+  }
+
   createForm.classList.add('loading');
 
   const url = document.getElementById('url').value;
@@ -36,7 +64,8 @@ createForm.addEventListener('submit', async (e) => {
       },
       body: JSON.stringify({
         url: url,
-        shortcode: shortcode || undefined
+        shortcode: shortcode || undefined,
+        password: password || undefined
       })
     });
 
@@ -60,13 +89,30 @@ createForm.addEventListener('submit', async (e) => {
 });
 
 async function deleteLink(code) {
+  const linkRow = document.querySelector(`tr[data-code="${code}"]`);
+  const hasPassword = linkRow ? linkRow.getAttribute('data-has-password') === 'true' : false;
+  
+  let password = '';
+  if (hasPassword) {
+    password = prompt('This link is password protected. Enter the password to delete:');
+    if (!password) {
+      return;
+    }
+  }
+
   if (!confirm('Are you sure you want to delete this link?')) {
     return;
   }
 
   try {
     const response = await fetch('/api/links/' + code, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        password: password || undefined
+      })
     });
 
     if (response.ok) {
@@ -75,7 +121,8 @@ async function deleteLink(code) {
         window.location.reload();
       }, 1000);
     } else {
-      showError('Failed to delete link');
+      const errorData = await response.json();
+      showError(errorData.error || 'Failed to delete link');
     }
   } catch (error) {
     showError('Network error. Please try again.');

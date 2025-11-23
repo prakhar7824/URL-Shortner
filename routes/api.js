@@ -5,7 +5,7 @@ const { isValidUrl, isValidShortCode, generateShortCode } = require('../utils/va
 
 router.post('/links', async (req, res) => {
   try {
-    const { url, shortcode } = req.body;
+    const { url, shortcode, password } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -56,13 +56,19 @@ router.post('/links', async (req, res) => {
       }
     }
 
+    const insertData = {
+      shortcode: code,
+      target_url: url,
+      click_count: 0
+    };
+
+    if (password && password.trim() !== '') {
+      insertData.password = password.trim();
+    }
+
     const { data, error } = await supabase
       .from('links')
-      .insert({
-        shortcode: code,
-        target_url: url,
-        click_count: 0
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -84,14 +90,20 @@ router.get('/links', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('links')
-      .select('*')
+      .select('id, shortcode, target_url, click_count, last_clicked_at, created_at, password')
       .order('created_at', { ascending: false });
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch links' });
     }
 
-    res.json(data);
+    const linksWithPasswordFlag = data.map(link => ({
+      ...link,
+      has_password: !!link.password,
+      password: undefined
+    }));
+
+    res.json(linksWithPasswordFlag);
   } catch (error) {
     console.error('Error fetching links:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -104,7 +116,7 @@ router.get('/links/:code', async (req, res) => {
 
     const { data, error } = await supabase
       .from('links')
-      .select('*')
+      .select('id, shortcode, target_url, click_count, last_clicked_at, created_at, password')
       .eq('shortcode', code)
       .single();
 
@@ -112,7 +124,13 @@ router.get('/links/:code', async (req, res) => {
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    res.json(data);
+    const response = {
+      ...data,
+      has_password: !!data.password,
+      password: undefined
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Error fetching link:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -122,6 +140,27 @@ router.get('/links/:code', async (req, res) => {
 router.delete('/links/:code', async (req, res) => {
   try {
     const { code } = req.params;
+    const { password } = req.body;
+
+    const { data: link, error: fetchError } = await supabase
+      .from('links')
+      .select('password')
+      .eq('shortcode', code)
+      .single();
+
+    if (fetchError || !link) {
+      return res.status(404).json({ error: 'Link not found' });
+    }
+
+    if (link.password) {
+      if (!password) {
+        return res.status(401).json({ error: 'Password is required to delete this link' });
+      }
+
+      if (link.password !== password.trim()) {
+        return res.status(403).json({ error: 'Incorrect password' });
+      }
+    }
 
     const { error } = await supabase
       .from('links')

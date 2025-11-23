@@ -191,4 +191,27 @@ tr:hover {
   outline: none;
   border-color: #667eea;
 }
+.warning-message {
+  background: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 4px solid #ffc107;
+  font-size: 14px;
+}
+.warning-message strong {
+  display: block;
+  margin-bottom: 5px;
+}
+.password-protected {
+  color: #28a745;
+  font-size: 12px;
+  font-weight: 600;
+}
+.no-password {
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 600;
+}
 
