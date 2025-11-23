@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats - {{code}}</title>
+  <link rel="stylesheet" href="/css/stats.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Link Statistics</h1>
+      <a href="/">← Back to Dashboard</a>
+    </div>
+    <div class="content">
+      <div class="stat-card">
+        <div class="stat-label">Short Code</div>
+        <div class="stat-value">{{shortcode}}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Target URL</div>
+        <div class="url-display">{{target_url}}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Clicks</div>
+        <div class="stat-value">{{click_count}}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Clicked</div>
+        <div class="stat-value">{{last_clicked}}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Created At</div>
+        <div class="stat-value">{{created_at}}</div>
+      </div>
+      <div class="actions">
+        <a href="/" class="btn btn-primary">Dashboard</a>
+        <a href="/{{shortcode}}" class="btn btn-secondary" target="_blank">Test Redirect</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

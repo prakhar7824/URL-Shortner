@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener - Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔗 URL Shortener</h1>
+      <p>Create, manage, and track your short links</p>
+    </div>
+    <div class="content">
+      <div class="form-section">
+        <h2>Create New Short Link</h2>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        <form id="createForm">
+          <div class="form-group">
+            <label for="url">Target URL *</label>
+            <input type="url" id="url" name="url" placeholder="https://example.com" required>
+            <small>Enter the full URL you want to shorten (must include http:// or https://)</small>
+          </div>
+          <div class="form-group">
+            <label for="shortcode">Custom Short Code (Optional)</label>
+            <input type="text" id="shortcode" name="shortcode" placeholder="mycode" pattern="[A-Za-z0-9]{6,8}" maxlength="8">
+            <small>6-8 characters, letters and numbers only. Leave empty for auto-generation.</small>
+          </div>
+          <button type="submit" class="btn btn-primary">Create Short Link</button>
+        </form>
+      </div>
+
+      <div class="table-section">
+        <h2>All Links</h2>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by shortcode or URL...">
+        </div>
+        <div class="table-container">
+          {{linksTable}}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
+
